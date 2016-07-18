@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    {% if id < 1 %}
+        <a href="/create" class="btn btn-default">Back to create new ToDo Task</a>
+    {% else %}
+        <a href="/edit/{{ id }}" class="btn btn-default">Back to editing ToDo Task</a>
+    {% endif %}
+    <br />
+    <div class="col-lg-6">
+    <h3 class="page-header">Registered Categories</h3>
+        <ul class="list-group">
+        {% set ix = 0 %}
+        {% for categ in categories %}
+            {% set ix = ix + 1 %}
+            <li class="list-group-item">{{ ix }}. <strong>{{ categ.name }}</strong></li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="col-lg-6">
+    <h2 class="page-header">New Category</h2>
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    {{ form_end(form) }}
+    </div>
+{% endblock %}
+
+{% block javascripts %}{% endblock %}

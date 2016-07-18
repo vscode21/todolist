@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <a href="/" class="btn btn-default">Back to ToDo List</a>
+    <br />
+    <h2 class="page-header">Create ToDo</h2>
+    {% include 'todo/ftodo.html.twig' %}
+    <br />
+{% endblock %}
+
+{% block javascripts %}{% endblock %}
