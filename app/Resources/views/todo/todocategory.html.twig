@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 
-{% block stylesheets %}
-    <!-- Bootstrap core CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+{% block javascriptshead %}
+    {{  parent() }}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -30,4 +30,21 @@
     </div>
 {% endblock %}
 
-{% block javascripts %}{% endblock %}
+{% block javascripts %}
+    {{  parent() }} }}
+    <script>
+        jQuery(document).ready(function() {
+            jQuery.ajax({
+                type: "POST",
+                url: "/ajax",
+                data: {request: 'Vlad'},
+                success: function (data, dataType) {
+                    alert(data.data);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert('Error : ' + errorThrown);
+                }
+            });
+        });
+    </script>
+{% endblock %}

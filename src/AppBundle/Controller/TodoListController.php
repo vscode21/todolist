@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use Proxies\__CG__\AppBundle\Entity\TodoPriority;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,19 +12,12 @@ use AppBundle\Entity\TodoCategory;
 use AppBundle\Form\TodoType;
 use AppBundle\Form\TodoCategoryType;
 
-use Symfony\Component\Form\Extension\Core\Type\ButtonType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-
 class TodoListController extends Controller
 {
-    private function itemManager(Request $request, $twig, $todo = false, $button = 'Save', $message = '')
+    private function itemManager(Request $request, $twig, $todo = false, $message = '')
     {
-        $id = 0;
-        
+        $doctrine = $this->getDoctrine();
+
         if (empty($todo) || !($todo instanceof Todo)) {
             $persist = true;
             
@@ -31,46 +25,71 @@ class TodoListController extends Controller
             
             $dateDue = new \DateTime('tomorrow');
             $todo->setDateDue($dateDue);
+
+            $id = 0;
         }
         else {
             $persist = false;
             
             $id = $todo->getId();
         }
-        
-        $categs = $this->getDoctrine()
-            ->getRepository('AppBundle:TodoCategory')
-            ->findall();
-/*
-0 => TodoCategory {
-    id: 1
-    name: "Work"
-    todos: PersistentCollection {
+
+        /*
+        0 => TodoCategory {
+            id: 1
+            name: "Work"
+            todos: PersistentCollection {
+                ...
+            }
+        }
         ...
-    }
-}
-...
-*/
-        
+        */
+        $categsRepo = $doctrine->getRepository('AppBundle:TodoCategory');
+        $categs = $categsRepo->findall();
+        if (count($categs) < 1) {
+            if (!isset($em)) {
+                $em = $doctrine->getManager();
+            }
+            $cinit = ['Common'];
+            for ($i = 0; $i < count($cinit); ++$i) {
+                $c = new TodoCategory();
+                $c->setName($cinit[$i]);
+                $em->persist($c);
+            }
+            $em->flush();
+            $categs = $categsRepo->findall();
+        }
         $categories = array();
         foreach ($categs as $val) {
             $categories[$val->getName()] = $val;
         }
-        
-        $priors = $this->getDoctrine()
-            ->getRepository('AppBundle:TodoPriority')
-            ->findall();
-/*
-0 => TodoPriority {
-    id: 1
-    name: "Normal"
-    todos: PersistentCollection {
+
+        /*
+        0 => TodoPriority {
+            id: 1
+            name: "Normal"
+            todos: PersistentCollection {
+                ...
+            }
+        }
         ...
-    }
-}
-...
-*/
-        
+        */
+        $priorsRepo = $doctrine->getRepository('AppBundle:TodoPriority');
+        $priors = $priorsRepo->findall();
+
+        if (count($priors) < 1) {
+            if (!isset($em)) {
+                $em = $doctrine->getManager();
+            }
+            $pinit = ['Normal', 'Low', 'High'];
+            for ($i = 0; $i < count($pinit); ++$i) {
+                $p = new TodoPriority();
+                $p->setName($pinit[$i]);
+                $em->persist($p);
+            }
+            $em->flush();
+            $priors = $priorsRepo->findall();
+        }
         $priorities = array();
         foreach ($priors as $val) {
             $priorities[$val->getName()] = $val;
@@ -100,8 +119,9 @@ class TodoListController extends Controller
             $todo->setDateDue($dateDue);
             $todo->setDateCreated($dateCreate);
             
-            $em = $this->getDoctrine()
-                ->getManager();
+            if (!isset($em)) {
+                $em = $doctrine->getManager();
+            }
             
             if ($persist) {
                 $em->persist($todo);
@@ -122,7 +142,7 @@ class TodoListController extends Controller
             'link' => ($id > 0) ? '/category/'.$id : '/category',
         ]);
     }
-    
+
     /**
     * @Route("/", name="homepage")
     */
@@ -142,7 +162,7 @@ class TodoListController extends Controller
     */
     public function createAction(Request $request)
     {
-        return $this->itemManager($request, 'todo/create.html.twig', false, 'Create ToDo', 'ToDo Created!');
+        return $this->itemManager($request, 'todo/create.html.twig', false, 'ToDo Created!');
     }
     
     /**
@@ -196,7 +216,7 @@ class TodoListController extends Controller
                 ->getRepository('AppBundle:Todo')
                 ->find($id);
             
-            return $this->itemManager($request, 'todo/edit.html.twig', $todo, 'Update ToDo', 'ToDo Updated!');
+            return $this->itemManager($request, 'todo/edit.html.twig', $todo, 'ToDo Updated!');
         }
     }
     
@@ -213,19 +233,19 @@ class TodoListController extends Controller
     */
     public function categoryAction_(Request $request, $id)
     {
+        /*
+        0 => TodoCategory {
+            id: 1
+            name: "Work"
+            todos: PersistentCollection {
+                ...
+            }
+        }
+        ...
+        */
         $categories = $this->getDoctrine()
             ->getRepository('AppBundle:TodoCategory')
             ->findall();
-/*
-0 => TodoCategory {
-    id: 1
-    name: "Work"
-    todos: PersistentCollection {
-        ...
-    }
-}
-...
-*/
         $category = new TodoCategory();
         
         $form = $this->createForm(TodoCategoryType::class, $category);
