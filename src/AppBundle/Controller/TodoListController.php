@@ -146,12 +146,12 @@ class TodoListController extends Controller
     /**
     * @Route("/", name="homepage")
     */
-    public function indexAction(Request $request)
+    public function indexAction()
     {
         $todos = $this->getDoctrine()
             ->getRepository('AppBundle:Todo')
             ->findall();
-        
+
         return $this->render('todo/index.html.twig', [
             'todos' => $todos,
         ]);
@@ -168,7 +168,7 @@ class TodoListController extends Controller
     /**
     * @Route("/delete/{id}", name="delete", defaults={ "id": 0 }, requirements={ "id": "\d+" })
     */
-    public function deleteAction(Request $request, $id)
+    public function deleteAction($id)
     {
         $todo = $this->getDoctrine()
             ->getRepository('AppBundle:Todo')
@@ -192,7 +192,7 @@ class TodoListController extends Controller
     /**
     * @Route("/details/{id}", name="details", defaults={ "id": 0 }, requirements={ "id": "\d+" })
     */
-    public function detailsAction(Request $request, $id)
+    public function detailsAction($id)
     {
         $todo = $this->getDoctrine()
             ->getRepository('AppBundle:Todo')
@@ -263,12 +263,12 @@ class TodoListController extends Controller
                 
                 $em->flush();
                 
-                if ($id < 1) {
+                /*if ($id < 1) {
                     return $this->redirectToRoute('create');
                 }
                 else {
                     return $this->redirectToRoute('edit', ['id' => $id]);
-                }
+                }*/
             }
         }
         

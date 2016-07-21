@@ -1,0 +1,5 @@
+{% set ix = 0 %}
+{% for categ in categories %}
+    {% set ix = ix + 1 %}
+    <li class="list-group-item">{{ ix }}. <strong>{{ categ.name }}</strong></li>
+{% endfor %}

@@ -15,11 +15,7 @@
     <div class="col-lg-6">
     <h3 class="page-header">Registered Categories</h3>
         <ul class="list-group">
-        {% set ix = 0 %}
-        {% for categ in categories %}
-            {% set ix = ix + 1 %}
-            <li class="list-group-item">{{ ix }}. <strong>{{ categ.name }}</strong></li>
-        {% endfor %}
+            {%  include 'todo/todocategory-item.html.twig' %}
         </ul>
     </div>
     <div class="col-lg-6">
@@ -37,9 +33,11 @@
             jQuery.ajax({
                 type: "POST",
                 url: "/ajax",
-                data: {request: 'Vlad'},
-                success: function (data, dataType) {
-                    alert(data.data);
+                data: {
+                    data: 'Vlad'
+                },
+                success: function (response, dataType) {
+                    jQuery('.list-group').html(response.data);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     alert('Error : ' + errorThrown);

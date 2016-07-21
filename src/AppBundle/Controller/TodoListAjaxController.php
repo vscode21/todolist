@@ -19,15 +19,13 @@ class TodoListAjaxController extends Controller
 {
     /**
      * @Route("/ajax", name="ajax_categories_update")
-     * @param Request $request
      */
     public function categoriesUpdateAction(Request $request)
     {
         if (!$request->isXMLHttpRequest()) {
-            return new Response('This is not AJAX!', 400);
+            return new Response('This is not an AJAX call!', 400);
         }
-        //return new JsonResponse(array('data' => $request->query->get('data')));
-        return new JsonResponse(array('data' => $request->request->get('request')));
+        //return new JsonResponse(array('data' => $request->request->get('data')));
 
         $doctrine = $this->getDoctrine();
 
@@ -61,6 +59,10 @@ class TodoListAjaxController extends Controller
             $categories[$val->getName()] = $val;
         }
 
-        return new JsonResponse(array('data' => $categories));
+        $html = $this->render('todo/todocategory-item.html.twig', [
+            'categories' => $categories,
+        ]);
+
+        return new JsonResponse(array('data' => $html->getContent()));
     }
 }
