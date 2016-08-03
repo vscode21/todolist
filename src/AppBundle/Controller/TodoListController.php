@@ -2,10 +2,13 @@
 
 namespace AppBundle\Controller;
 
-use Proxies\__CG__\AppBundle\Entity\TodoPriority;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
+//use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+
+use Proxies\__CG__\AppBundle\Entity\TodoPriority;
 
 use AppBundle\Entity\Todo;
 use AppBundle\Entity\TodoCategory;
@@ -45,20 +48,8 @@ class TodoListController extends Controller
         ...
         */
         $categsRepo = $doctrine->getRepository('AppBundle:TodoCategory');
+        $categsRepo->createTable();
         $categs = $categsRepo->findall();
-        if (count($categs) < 1) {
-            if (!isset($em)) {
-                $em = $doctrine->getManager();
-            }
-            $cinit = ['Common'];
-            for ($i = 0; $i < count($cinit); ++$i) {
-                $c = new TodoCategory();
-                $c->setName($cinit[$i]);
-                $em->persist($c);
-            }
-            $em->flush();
-            $categs = $categsRepo->findall();
-        }
         $categories = array();
         foreach ($categs as $val) {
             $categories[$val->getName()] = $val;
@@ -75,21 +66,8 @@ class TodoListController extends Controller
         ...
         */
         $priorsRepo = $doctrine->getRepository('AppBundle:TodoPriority');
+        $priorsRepo->createTable();
         $priors = $priorsRepo->findall();
-
-        if (count($priors) < 1) {
-            if (!isset($em)) {
-                $em = $doctrine->getManager();
-            }
-            $pinit = ['Normal', 'Low', 'High'];
-            for ($i = 0; $i < count($pinit); ++$i) {
-                $p = new TodoPriority();
-                $p->setName($pinit[$i]);
-                $em->persist($p);
-            }
-            $em->flush();
-            $priors = $priorsRepo->findall();
-        }
         $priorities = array();
         foreach ($priors as $val) {
             $priorities[$val->getName()] = $val;
@@ -144,13 +122,16 @@ class TodoListController extends Controller
     }
 
     /**
-    * @Route("/", name="homepage")
-    */
+     * @Route("/", name="homepage")
+     */
     public function indexAction()
     {
-        $todos = $this->getDoctrine()
-            ->getRepository('AppBundle:Todo')
-            ->findall();
+        $repo = $this->getDoctrine()
+            ->getRepository('AppBundle:Todo');
+
+        $repo->createTable();
+
+        $todos = $repo->findall();
 
         return $this->render('todo/index.html.twig', [
             'todos' => $todos,
@@ -158,24 +139,24 @@ class TodoListController extends Controller
     }
     
     /**
-    * @Route("/create", name="create")
-    */
+     * @Route("/create", name="create")
+     */
     public function createAction(Request $request)
     {
         return $this->itemManager($request, 'todo/create.html.twig', false, 'ToDo Created!');
     }
     
     /**
-    * @Route("/delete/{id}", name="delete", defaults={ "id": 0 }, requirements={ "id": "\d+" })
-    */
+     * @Route("/delete/{id}", name="delete", defaults={ "id": 0 }, requirements={ "id": "\d+" })
+     */
     public function deleteAction($id)
     {
-        $todo = $this->getDoctrine()
-            ->getRepository('AppBundle:Todo')
+        $doctrine = $this->getDoctrine();
+
+        $todo = $doctrine->getRepository('AppBundle:Todo')
             ->find($id);
         
-        $em = $this->getDoctrine()
-            ->getManager();
+        $em = $doctrine->getManager();
         
         $em->remove($todo);
         
@@ -190,10 +171,16 @@ class TodoListController extends Controller
     }
     
     /**
-    * @Route("/details/{id}", name="details", defaults={ "id": 0 }, requirements={ "id": "\d+" })
-    */
+     * @Route("/details/{id}", name="details", defaults={ "id": 0 }, requirements={ "id": "\d+" })
+     * Security("has_role('ROLE_ADMIN')")
+     */
     public function detailsAction($id)
     {
+        if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+            throw $this->createAccessDeniedException();
+        }
+        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Unable to access this page!');
+
         $todo = $this->getDoctrine()
             ->getRepository('AppBundle:Todo')
             ->find($id);
@@ -204,8 +191,8 @@ class TodoListController extends Controller
     }
     
     /**
-    * @Route("/edit/{id}", name="edit", defaults={ "id": 0 }, requirements={ "id": "\d+" })
-    */
+     * @Route("/edit/{id}", name="edit", defaults={ "id": 0 }, requirements={ "id": "\d+" })
+     */
     public function editAction(Request $request, $id)
     {
         if ($id < 1) {
@@ -221,16 +208,16 @@ class TodoListController extends Controller
     }
     
     /**
-    * @Route("/category", name="category")
-    */
+     * @Route("/category", name="category")
+     */
     public function categoryAction(Request $request)
     {
         return $this->categoryAction_($request, 0);
     }
     
     /**
-    * @Route("/category/{id}", name="category", defaults={ "id": 0 }, requirements={ "id": "\d+" })
-    */
+     * @Route("/category/{id}", name="category", defaults={ "id": 0 }, requirements={ "id": "\d+" })
+     */
     public function categoryAction_(Request $request, $id)
     {
         /*
@@ -243,9 +230,11 @@ class TodoListController extends Controller
         }
         ...
         */
-        $categories = $this->getDoctrine()
-            ->getRepository('AppBundle:TodoCategory')
+        $doctrine = $this->getDoctrine();
+
+        $categories = $doctrine->getRepository('AppBundle:TodoCategory')
             ->findall();
+
         $category = new TodoCategory();
         
         $form = $this->createForm(TodoCategoryType::class, $category);
@@ -256,8 +245,7 @@ class TodoListController extends Controller
             if ($form->isValid()) {
                 $category->setName($form['name']->getData());
                 
-                $em = $this->getDoctrine()
-                    ->getManager();
+                $em = $doctrine->getManager();
                 
                 $em->persist($category);
                 
