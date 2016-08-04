@@ -60,4 +60,32 @@ QRY;
 
         return false;
     }
+
+    public function findAllItems($options = false)
+    {
+        /*
+        0 => TodoCategory {
+            id: 1
+            name: "Work"
+            todos: PersistentCollection {
+                ...
+            }
+        }
+        ...
+        */
+        $this->createTable();
+
+        $itms = $this->findall();
+
+        if ($options === true) {
+            $items = array();
+            foreach ($itms as $val) {
+                $items[$val->getName()] = $val;
+            }
+
+            return $items;
+        }
+
+        return $itms;
+    }
 }

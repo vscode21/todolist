@@ -17,6 +17,8 @@ use AppBundle\Form\TodoCategoryType;
 
 class TodoListController extends Controller
 {
+    const KAJAX4CATEGORY = false;
+
     private function itemManager(Request $request, $twig, $todo = false, $message = '')
     {
         $doctrine = $this->getDoctrine();
@@ -37,42 +39,12 @@ class TodoListController extends Controller
             $id = $todo->getId();
         }
 
-        /*
-        0 => TodoCategory {
-            id: 1
-            name: "Work"
-            todos: PersistentCollection {
-                ...
-            }
-        }
-        ...
-        */
-        $categsRepo = $doctrine->getRepository('AppBundle:TodoCategory');
-        $categsRepo->createTable();
-        $categs = $categsRepo->findall();
-        $categories = array();
-        foreach ($categs as $val) {
-            $categories[$val->getName()] = $val;
-        }
+        $categories = $doctrine->getRepository('AppBundle:TodoCategory')
+            ->findAllItems(true);
 
-        /*
-        0 => TodoPriority {
-            id: 1
-            name: "Normal"
-            todos: PersistentCollection {
-                ...
-            }
-        }
-        ...
-        */
-        $priorsRepo = $doctrine->getRepository('AppBundle:TodoPriority');
-        $priorsRepo->createTable();
-        $priors = $priorsRepo->findall();
-        $priorities = array();
-        foreach ($priors as $val) {
-            $priorities[$val->getName()] = $val;
-        }
-        
+        $priorities = $doctrine->getRepository('AppBundle:TodoPriority')
+            ->findAllItems(true);
+
         $form = $this->createForm(TodoType::class, $todo, [
             'categories' => $categories,
             'priorities' => $priorities,
@@ -82,21 +54,13 @@ class TodoListController extends Controller
         $form->handleRequest($request);
         
         if ($form->isSubmitted() && $form->isValid()) {
-            $name = $form['name']->getData();
-            $category = $form['category']->getData();
-            $description = $form['description']->getData();
-            $priority = $form['priority']->getData();
-            $dateDue = $form['date_due']->getData();
-            
-            $dateCreate = new \DateTime('now');
-            
-            $todo->setName($name);
-            $todo->setCategory($category);
-            $todo->setDescription($description);
-            $todo->setPriority($priority);
-            $todo->setDateDue($dateDue);
-            $todo->setDateCreated($dateCreate);
-            
+            $todo->setName($form['name']->getData());
+            $todo->setCategory($form['category']->getData());
+            $todo->setDescription($form['description']->getData());
+            $todo->setPriority($form['priority']->getData());
+            $todo->setDateDue($form['date_due']->getData());
+            $todo->setDateCreated(new \DateTime('now'));
+
             if (!isset($em)) {
                 $em = $doctrine->getManager();
             }
@@ -176,10 +140,10 @@ class TodoListController extends Controller
      */
     public function detailsAction($id)
     {
-        if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+        /*if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
             throw $this->createAccessDeniedException();
         }
-        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Unable to access this page!');
+        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Unable to access this page!');*/
 
         $todo = $this->getDoctrine()
             ->getRepository('AppBundle:Todo')
@@ -250,13 +214,14 @@ class TodoListController extends Controller
                 $em->persist($category);
                 
                 $em->flush();
-                
-                /*if ($id < 1) {
-                    return $this->redirectToRoute('create');
+
+                if (!self::KAJAX4CATEGORY) {
+                    if ($id < 1) {
+                        return $this->redirectToRoute('create');
+                    } else {
+                        return $this->redirectToRoute('edit', ['id' => $id]);
+                    }
                 }
-                else {
-                    return $this->redirectToRoute('edit', ['id' => $id]);
-                }*/
             }
         }
         
@@ -264,6 +229,7 @@ class TodoListController extends Controller
             'form' => $form->createView(),
             'categories' => $categories,
             'id' => $id,
+            'ajax' => self::KAJAX4CATEGORY,
         ]);
     }
 }

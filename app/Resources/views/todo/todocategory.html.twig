@@ -19,7 +19,7 @@
         </ul>
     </div>
     <div class="col-lg-6">
-    <h2 class="page-header">New Category</h2>
+    <h3 class="page-header">New Category</h3>
     {{ form_start(form) }}
     {{ form_widget(form) }}
     {{ form_end(form) }}
@@ -27,22 +27,24 @@
 {% endblock %}
 
 {% block javascripts %}
-    {{  parent() }} }}
+    {{  parent() }}
+    {%  if ajax %}
     <script>
         jQuery(document).ready(function() {
             jQuery.ajax({
                 type: "POST",
                 url: "/ajax",
                 data: {
-                    data: 'Vlad'
+                    data: 1
                 },
-                success: function (response, dataType) {
+                success: function(response, dataType) {
                     jQuery('.list-group').html(response.data);
                 },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
                     alert('Error : ' + errorThrown);
                 }
             });
         });
     </script>
+    {% endif %}
 {% endblock %}
